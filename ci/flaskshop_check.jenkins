@@ -17,20 +17,24 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 sh '''
+                bash -c "
                 python3 -m venv $VIRTUAL_ENV
                 source $VIRTUAL_ENV/bin/activate
                 pip install --upgrade pip
                 pip install -r requirements.txt
+                "
                 '''
             }
         }
         stage('Prepare Flaskshop Database') {
             steps {
                 sh '''
+                bash -c "
                 source $VIRTUAL_ENV/bin/activate
                 flask cleandb
                 flask createdb
                 flask seed
+                "
                 '''
             }
         }
@@ -38,9 +42,11 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    bash -c "
                     source $VIRTUAL_ENV/bin/activate
                     nohup flask run > flask.log 2>&1 &
                     echo $! > flask.pid
+                    "
                     '''
                 }
             }
@@ -49,10 +55,12 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    bash -c "
                     if [ -f flask.pid ]; then
                         kill $(cat flask.pid) || true
                         rm flask.pid
                     fi
+                    "
                     '''
                 }
             }
@@ -64,7 +72,7 @@ pipeline {
             echo 'Cleaning up...'
         }
         failure {
-            mail to: 'your-email@example.com',
+            mail to: 'masoodav@gmail.com',
                  subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
                  body: "Build failed! Check Jenkins console output for details."
         }
