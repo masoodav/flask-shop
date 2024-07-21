@@ -55,12 +55,14 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    bash -c "
+                    #!/bin/bash
                     if [ -f flask.pid ]; then
-                        kill $(cat flask.pid) || true
+                        PID=$(cat flask.pid)
+                        if [ -n "$PID" ]; then
+                            kill $PID || true
+                        fi
                         rm flask.pid
                     fi
-                    "
                     '''
                 }
             }
