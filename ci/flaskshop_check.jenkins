@@ -2,32 +2,29 @@ pipeline {
     agent any
     
     environment {
-        // Define environment variables, if needed
         VIRTUAL_ENV = 'venv'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from the GitHub repository
                 git 'https://github.com/masoodav/flask-shop.git'
                 script {
-                    // Checkout the specific branch if needed
                     checkout([$class: 'GitSCM', branches: [[name: 'ci-env-setup']], userRemoteConfigs: [[url: 'https://github.com/masoodav/flask-shop.git']]])
                 }
             }
         }
         stage('Setup Environment') {
             steps {
-                // Set up Python virtual environment and install dependencies
                 sh '''
                 python3 -m venv $VIRTUAL_ENV
                 source $VIRTUAL_ENV/bin/activate
+                pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
         }
-        stage('Prepare flaskshop database') {
+        stage('Prepare Flaskshop Database') {
             steps {
                 sh '''
                 source $VIRTUAL_ENV/bin/activate
@@ -37,10 +34,9 @@ pipeline {
                 '''
             }
         }
-        stage('Run flaskshop') {
+        stage('Run Flaskshop') {
             steps {
                 script {
-                    // Run Flask app in the background
                     sh '''
                     source $VIRTUAL_ENV/bin/activate
                     nohup flask run > flask.log 2>&1 &
@@ -49,10 +45,9 @@ pipeline {
                 }
             }
         }
-        stage('Stop flaskshop') {
+        stage('Stop Flaskshop') {
             steps {
                 script {
-                    // Stop the Flask app using the PID file
                     sh '''
                     if [ -f flask.pid ]; then
                         kill $(cat flask.pid) || true
@@ -65,12 +60,13 @@ pipeline {
     }
     post {
         always {
-            // Actions that are always performed after the pipeline stages
             archiveArtifacts artifacts: '**/target/*.xml'
             echo 'Cleaning up...'
         }
         failure {
-            // Notify on failure
+            mail to: 'your-email@example.com',
+                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                 body: "Build failed! Check Jenkins console output for details."
         }
     }
 }
