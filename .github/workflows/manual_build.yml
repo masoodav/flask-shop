@@ -1,0 +1,16 @@
+name: Trigger Jenkins Job
+
+on:
+  workflow_dispatch:  # This allows the workflow to be triggered manually
+
+jobs:
+  trigger-jenkins:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Trigger Jenkins Job
+      run: |
+        # Trigger the Jenkins job
+        curl -X POST "$JENKINS_URL" \
+          --user "$JENKINS_USER:$JENKINS_TOKEN" \
+          --header "Jenkins-Crumb:$(curl -u $JENKINS_USER:$JENKINS_TOKEN -s "$JENKINS_URL/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")"

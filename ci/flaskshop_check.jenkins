@@ -26,6 +26,24 @@ pipeline {
                 '''
             }
         }
+        stage('Static Code Analysis - Flake8') {
+            steps {
+                sh '''
+                #!/bin/bash
+                source $VIRTUAL_ENV/bin/activate
+                flake8 . --output-file=flake8-report.txt
+                '''
+            }
+        }
+        stage('Static Code Analysis - Pylint') {
+            steps {
+                sh '''
+                #!/bin/bash
+                source $VIRTUAL_ENV/bin/activate
+                pylint flask_shop > pylint-report.txt || true
+                '''
+            }
+        }
         stage('Prepare Flaskshop Database') {
             steps {
                 sh '''
