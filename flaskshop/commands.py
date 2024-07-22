@@ -215,3 +215,11 @@ def reindex():
     Item.init()
     products = Product.query.all()
     Item.bulk_update(products, op_type="create")
+
+@click.command()
+@with_appcontext
+def cleandb():
+    """Drops all tables from the database."""
+    db.reflect()
+    db.drop_all()
+    click.echo("Dropped all tables.")

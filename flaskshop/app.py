@@ -86,6 +86,7 @@ def register_commands(app):
     app.cli.add_command(commands.seed)
     app.cli.add_command(commands.flushrdb)
     app.cli.add_command(commands.reindex)
+    app.cli.add_command(commands.cleandb)
 
 
 def load_plugins(app):

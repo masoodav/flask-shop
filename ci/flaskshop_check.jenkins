@@ -1,0 +1,100 @@
+pipeline {
+    agent any
+    
+    environment {
+        VIRTUAL_ENV = 'venv'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/masoodav/flask-shop.git'
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: 'ci-env-setup']], userRemoteConfigs: [[url: 'https://github.com/masoodav/flask-shop.git']]])
+                }
+            }
+        }
+        stage('Setup Environment') {
+            steps {
+                sh '''
+                bash -c "
+                python3 -m venv $VIRTUAL_ENV
+                source $VIRTUAL_ENV/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                "
+                '''
+            }
+        }
+        stage('Static Code Analysis - Flake8') {
+            steps {
+                sh '''
+                #!/bin/bash
+                source $VIRTUAL_ENV/bin/activate
+                flake8 . --output-file=flake8-report.txt
+                '''
+            }
+        }
+        stage('Static Code Analysis - Pylint') {
+            steps {
+                sh '''
+                #!/bin/bash
+                source $VIRTUAL_ENV/bin/activate
+                pylint flask_shop > pylint-report.txt || true
+                '''
+            }
+        }
+        stage('Prepare Flaskshop Database') {
+            steps {
+                sh '''
+                bash -c "
+                source $VIRTUAL_ENV/bin/activate
+                flask cleandb
+                flask createdb
+                flask seed
+                "
+                '''
+            }
+        }
+        stage('Run Flaskshop') {
+            steps {
+                script {
+                    sh '''
+                    bash -c "
+                    source $VIRTUAL_ENV/bin/activate
+                    nohup flask run > flask.log 2>&1 &
+                    echo $! > flask.pid
+                    "
+                    '''
+                }
+            }
+        }
+        stage('Stop Flaskshop') {
+            steps {
+                script {
+                    sh '''
+                    #!/bin/bash
+                    if [ -f flask.pid ]; then
+                        PID=$(cat flask.pid)
+                        if [ -n "$PID" ]; then
+                            kill $PID || true
+                        fi
+                        rm flask.pid
+                    fi
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/*.xml', allowEmptyArchive: true
+            echo 'Cleaning up...'
+        }
+        failure {
+            mail to: 'masoodav@gmail.com',
+                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                 body: "Build failed! Check Jenkins console output for details."
+        }
+    }
+}
