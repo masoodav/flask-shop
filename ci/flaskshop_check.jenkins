@@ -10,7 +10,7 @@ pipeline {
             steps {
                 git 'https://github.com/masoodav/flask-shop.git'
                 script {
-                    checkout([$class: 'GitSCM', branches: [[name: 'ci-env-setup']], userRemoteConfigs: [[url: 'https://github.com/masoodav/flask-shop.git']]])
+                    checkout([$class: 'GitSCM', branches: [[name: 'master']], userRemoteConfigs: [[url: 'https://github.com/masoodav/flask-shop.git']]])
                 }
             }
         }
