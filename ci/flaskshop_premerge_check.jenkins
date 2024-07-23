@@ -45,7 +45,7 @@ pipeline {
                 sh '''
                 bash -c "
                 source $VIRTUAL_ENV/bin/activate
-                pylint flask_shop > pylint-report.txt || true
+                pylint flaskshop > pylint-report.txt || true
                 "
                 '''
                 archiveArtifacts artifacts: 'pylint-report.txt', allowEmptyArchive: true
