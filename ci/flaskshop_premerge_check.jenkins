@@ -87,6 +87,16 @@ pipeline {
                 }
             }
         }
+        stage('Run Selenium Tests') {
+            steps {
+                sh '''
+                bash -c "
+                source $VIRTUAL_ENV/bin/activate
+                python tests/selenium_smoke_test.py
+                "
+                '''
+            }
+        }
         stage('Stop Flaskshop') {
             steps {
                 script {
